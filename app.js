@@ -1,7 +1,6 @@
 require("dotenv").config();
 
 const express = require("express");
-
 const app = express();
 const PORT = 5000 || process.env.PORT;
 
@@ -28,6 +27,12 @@ app.use(
   })
 );
 
+// const flash = require('connect-flash');
+// const toastr = require('express-toastr');
+
+// app.use(flash());
+// app.use(toastr());
+
 app.use(express.static("public"));
 app.use(methodOverride("_method"));
 
@@ -37,6 +42,12 @@ app.set("view engine", "ejs");
 
 app.use("/", require("./server/routes/main"));
 app.use("/", require("./server/routes/admin"));
+
+// app.use(function (req, res, next)
+// {
+//     res.locals.toasts = req.toastr.render()
+//     next()
+// });
 
 app.listen(PORT, () => {
   console.log(`App listening on port http://localhost:${PORT}`);

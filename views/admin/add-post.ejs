@@ -3,7 +3,7 @@
   <h2>Add New Post</h2>
 </div>
 
-<form action="/add-post" method="POST">
+<form action="/add-post" method="POST" enctype="multipart/form-data">
 
   <label for="title"><b>Title</b></label>
   <input type="text" placeholder="Post Title" name="title">
@@ -11,6 +11,16 @@
   <label for="body"><b>Content</b></label>
   <textarea name="body" cols="50" rows="10"></textarea>
 
-  <input type="submit" value="Add" class="btn">
+  <div>
+    <label for="image"><b>Image</b></label>
+  </div>
+
+  <div>
+    <input type="file" name="imageURL">
+  </div>
+
+  <div>
+    <input type="submit" value="Add" class="btn" style="margin-top: 30px;">
+  </div>
 
 </form>
