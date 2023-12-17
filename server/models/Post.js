@@ -14,6 +14,10 @@ const PostSchema = new Schema({
     type: String, // Giả sử bạn lưu đường dẫn hình ảnh, hoặc có thể lưu dưới dạng Buffer nếu cần
     required: true,
   },
+  author: {
+    type: String,
+    required: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

@@ -60,18 +60,36 @@ router.get("/admin", async (req, res) => {
 });
 
 /* GET
+ABOUT
+*/
+
+router.get("/about", (req, res) => {
+  const locals = {
+    title: "About",
+    description: "Information about us",
+  };
+  res.render("about", { 
+    locals,
+  });
+});
+
+/* GET
 CONTACT
 */
 
 router.get("/contact", (req, res) => {
   const locals = {
     title: "Contact",
-    description: "Register for a new account",
+    description: "Please follow us and leave your contact",
   };
   res.render("contact", { 
     locals,
   });
 });
+
+/* POST
+CONTACT
+*/
 
 router.post('/contact', (req, res) => {
   const { title, body } = req.body;

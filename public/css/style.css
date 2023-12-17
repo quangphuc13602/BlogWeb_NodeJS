@@ -48,6 +48,25 @@ img {
     margin-bottom: 5px;
 }
 
+.members {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start; 
+    flex-wrap: wrap;
+    padding: 11px;
+    flex-direction: row;
+}
+
+.member {
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 10px;
+    max-width: 300px;
+    text-align: center; 
+}
+
 input[type="text"],
 input[type="email"],
 input[type="password"],
