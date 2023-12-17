@@ -1,10 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Post = require("../models/Post");
-
 const connectDB = require("../config/db");
 connectDB();
-
 
 /* GET
 HOME 
@@ -76,14 +74,15 @@ router.post("/search", async (req, res) => {
     };
 
     let searchTerm = req.body.searchTerm;
-    const searchNoSpecialChar = searchTerm.replace(/[^a-zA-Z0-9 ]/g, "");
+    const searchNoSpecialChar = searchTerm.replace(/[^\p{L}\d ]/gu, "");
+    console.log("Processed Search Term on Server:", searchNoSpecialChar);
 
     const data = await Post.find({
       $or: [
         { title: { $regex: new RegExp(searchNoSpecialChar, "i") } },
         { body: { $regex: new RegExp(searchNoSpecialChar, "i") } },
       ],
-    });
+    }).collation({ locale: "vi", strength: 2 });
 
     res.render("search", {
       data,
