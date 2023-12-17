@@ -1,4 +1,6 @@
 const express = require("express");
+const app = express();
+const multer = require('multer');
 const router = express.Router();
 const Post = require("../models/Post");
 const User = require("../models/User");
@@ -8,6 +10,37 @@ const jwtSecret = process.env.JWT_SECRET;
 // const connectDB = require("../config/db");
 // connectDB();
 const adminlayout = "../views/layouts/admin";
+const bodyparser = require('body-parser'); //Xử lý ảnh
+const nodemailer = require("nodemailer"); // Send mail
+
+app.use(bodyparser.urlencoded({
+  extended:true
+}));
+
+var storage = multer.diskStorage({
+  destination:function(req, file, cb){
+    if( file.mimetype === "image/jpg"||
+        file.mimetype === "image/jpeg"||
+        file.mimetype === "image/png"){
+          cb(null,'public/images');
+        } else {
+          cb(new Error('Not image'), false);
+        }
+  },
+  filename:function(req, file, cb){
+    cb(null, Date.now()+'.jpg');
+  }
+});
+var upload = multer({storage:storage});
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'htluc3012@gmail.com',
+    pass: 'wsca ycog ttpo btan'
+  }
+});
+
 
 /* GET
 HOME 
@@ -18,7 +51,7 @@ router.get("/admin", async (req, res) => {
       title: "Blog website - admin",
       description: "Blog website created with Nodejs, express, mongodb",
     };
-    res.render("admin/index", {
+    res.render("admin/login", {
       locals,
     });
   } catch (error) {
@@ -26,22 +59,97 @@ router.get("/admin", async (req, res) => {
   }
 });
 
+/* GET
+CONTACT
+*/
+
+router.get("/contact", (req, res) => {
+  const locals = {
+    title: "Contact",
+    description: "Register for a new account",
+  };
+  res.render("contact", { 
+    locals,
+  });
+});
+
+router.post('/contact', (req, res) => {
+  const { title, body } = req.body;
+
+  if (!title || !body) {
+    // Nếu một trong các trường không tồn tại, trả về thông báo lỗi
+    // return res.status(400).send('Title and body are required.');
+    res.send('Title and body are required.');
+  }
+
+  const mailOptions = {
+      from: 'htluc3012@gmail.com',
+      to: 'luchuynhtanct@gmail.com', // Địa chỉ email của admin
+      subject: 'New Contact Form Submission',
+      text: `Title: ${title}\nBody: ${body}`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+          console.error(error);
+          res.send('Error sending email');
+      } else {
+          console.log('Email sent: ' + info.response);
+          res.send('Email sent successfully');
+      }
+  });
+});
+
 /* POST
     admin - register
 */
 
+router.get("/register", (req, res) => {
+  const locals = {
+    title: "Register",
+    description: "Register for a new account",
+  };
+  res.render("admin/register", { 
+    locals,
+  });
+});
+
 router.post("/register", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, rePassword } = req.body;
+
+    // Kiểm tra xem các trường dữ liệu có tồn tại không
+    if (!username || !password || !rePassword) {
+      // return res.status(400).json({ message: "Username, password, and re-password are required" });
+      res.send('Username, password, and re-password are required');
+    }
+
+    // Kiểm tra độ dài của mật khẩu
+    if (password.length < 6) {
+      // return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      res.send('Password must be at least 6 characters long');
+    }
+
+    // Kiểm tra mật khẩu và re-password có khớp nhau không
+    if (password !== rePassword) {
+      // return res.status(400).json({ message: "Password and re-password do not match" });
+      res.send('Password and re-password do not match');
+
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
+
     try {
       const user = await User.create({ username, password: hashedPassword });
-      res.status(201).json({ message: "User created", user });
+      // res.status(201).json({ message: "User created", user });
+      res.render("admin/login")
     } catch (error) {
       if (error.code === 11000) {
-        res.status(409).json({ message: "User already in use" });
+        // res.status(409).json({ message: "User already in use" });
+      res.send('User already in use');
       }
-      res.status(409).json({ message: "User already in use" });
+      // res.status(409).json({ message: "User already in use" });
+      res.send('User already in use');
     }
   } catch (error) {
     console.log(error);
@@ -91,7 +199,7 @@ router.post("/admin", async (req, res) => {
   }
 });
 
-/* get
+/* GET
     admin - dashboard
 */
 router.get("/dashboard", authMiddleware, async (req, res) => {
@@ -133,25 +241,25 @@ router.get("/add-post", authMiddleware, async (req, res) => {
   }
 });
 
+
 /**
  * POST /
  * Admin - Create New Post
  */
-router.post("/add-post", authMiddleware, async (req, res) => {
-  try {
-    try {
-      const newPost = new Post({
-        title: req.body.title,
-        body: req.body.body,
-      });
 
-      await Post.create(newPost);
-      res.redirect("/dashboard");
-    } catch (error) {
-      console.log(error);
-    }
+router.post("/add-post", authMiddleware, upload.single('imageURL'), async (req, res) => {
+  try {
+    const newPost = new Post({
+      title: req.body.title,
+      body: req.body.body,
+      imageURL: req.file.filename // Lưu tên file hình ảnh vào trường imageURL trong Post
+    });
+
+    await Post.create(newPost);
+    res.redirect("/dashboard");
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).send("Internal Server Error");
   }
 });
 
@@ -179,20 +287,30 @@ router.get("/edit-post/:id", authMiddleware, async (req, res) => {
 });
 
 /**
- * PUT /
+ * POST /
  * Admin - update
  */
-router.put("/edit-post/:id", authMiddleware, async (req, res) => {
+
+router.post("/edit-post/:id", authMiddleware, upload.single('imageURL'), async (req, res) => {
   try {
-    await Post.findByIdAndUpdate(req.params.id, {
+    const postId = req.params.id;
+    const updatedPostData = {
       title: req.body.title,
       body: req.body.body,
-      updatedAt: Date.now(),
-    });
+    };
+
+    // Kiểm tra xem có file hình ảnh được tải lên hay không
+    if (req.file) {
+      updatedPostData.imageURL = req.file.filename; // Lưu tên file hình ảnh vào trường imageURL trong Post
+    }
+
+    // Cập nhật bài viết
+    await Post.findByIdAndUpdate(postId, { $set: updatedPostData, updatedAt: Date.now() });
 
     res.redirect("/dashboard");
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).send("Internal Server Error");
   }
 });
 

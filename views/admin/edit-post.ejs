@@ -8,7 +8,7 @@
 
 </div>
 
-<form action="/edit-post/<%= data._id %>?_method=PUT" method="POST">
+<form action="/edit-post/<%= data._id %>?_method=POST" method="POST" enctype="multipart/form-data">
 
   <label for="title"><b>Title</b></label>
   <input type="text" placeholder="Post Title" name="title"
@@ -16,7 +16,20 @@
 
   <label for="body"><b>Content</b></label>
   <textarea name="body" cols="50" rows="10"><%= data.body %></textarea>
+  <div>
+    <label for="image"><b>Image</b></label>
+  </div>
 
-  <input type="submit" value="Update" class="btn">
+  <div>
+    <input type="file" name="imageURL">
+  </div>
+  
+  <% if (data.imageURL) { %>
+    <img src="/images/<%= data.imageURL %>" alt="Image" style="width: 500px; margin-top: 10px;">
+  <% } %>
+
+  <div style="margin-top: 10px;">
+    <input type="submit" value="Update" class="btn">
+  </div>
 
 </form>

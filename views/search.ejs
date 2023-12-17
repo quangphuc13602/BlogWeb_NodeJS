@@ -8,6 +8,7 @@
         <% data.forEach(post => { %>
         <li>
             <a href="/post/<%= post._id %>">
+                <img src="/images/<%= post.imageURL %>" alt="Image" style="width: 15%; border-radius: 10px;">
                 <span><%= post.title %></span>
                 <span class="article-list__date"><%=
                     post.createdAt.toDateString() %></span>
